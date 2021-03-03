@@ -58,13 +58,13 @@ def initialize_input_dict (mainFolderHDNs):
     with open(TmaxFiles[1], 'r') as file:
         day_Tmax = file.read()
     with open(TmaxFiles[2], 'r') as file:
-        temp_Tmax = file.read()
+        x1TmaxThershold = file.read()
 
     '''Step 4: Reading the lines of files inside Tmax folder'''
     weights_Inputs = weights_Inputs.replace('\n', '\t')
     weights_Inputs = weights_Inputs.split('\t')
     day_Tmax = day_Tmax.replace('\n', '\t').split('\t')
-    temp_Tmax = temp_Tmax.replace('\n', '\t').split('\t')
+    x1TmaxThershold = x1TmaxThershold.replace('\n', '\t').split('\t')
 
 
     '''Step 5: Reading files and lines of files inside Tmin folder''' 
@@ -73,11 +73,11 @@ def initialize_input_dict (mainFolderHDNs):
     with open(TminFiles[0], 'r') as file:
         day_Tmin = file.read()
     with open(TminFiles[1], 'r') as file:
-        temp_Tmin = file.read()
+        x2TminThershold = file.read()
     
     day_Tmin = day_Tmin.replace('\n', '\t')
     day_Tmin = day_Tmin.split('\t')
-    temp_Tmin = temp_Tmin.replace('\n', '\t').split('\t')
+    x2TminThershold = x2TminThershold.replace('\n', '\t').split('\t')
 
 
     '''Step 6: Reading the lines of files inside climate folder''' 
@@ -93,7 +93,9 @@ def initialize_input_dict (mainFolderHDNs):
     for i in range(len(pcpData)):
         pcpData[i] = pcpData[i].split(',')
     
-
+    ## 20210222 Saeid New HDNs
+    #for i in range(len(tmpData)):
+    #    tmpData[i] = tmpData[i].split(',')
 
     
     '''Step 7: Initialazing the input dictionary of climate stations which holds the information of accumulation
@@ -121,15 +123,15 @@ def initialize_input_dict (mainFolderHDNs):
             #if element == stnDict['fileName'][2:]:
                 stnDict['DayTmin'] = day_Tmin[i+1]
                 
-        for i, element in enumerate(temp_Tmax):
+        for i, element in enumerate(x1TmaxThershold):
             if element == stnDict['fileName'][:]:
             #if element == stnDict['fileName'][2:]:
-                stnDict['TempTmax'] = temp_Tmax[i+1]
+                stnDict['TempTmax'] = x1TmaxThershold[i+1]
 
-        for i, element in enumerate(temp_Tmin):
+        for i, element in enumerate(x2TminThershold):
             if element == stnDict['fileName'][:]:
             #if element == stnDict['fileName'][2:]:  
-                stnDict['TempTmin'] = temp_Tmin[i+1]
+                stnDict['TempTmin'] = x2TminThershold[i+1]
 
         for i, element in enumerate(day_Tmax):
             if element == stnDict['fileName'][:]:
@@ -194,6 +196,7 @@ def daterange(start_date, end_date):
 
 ### OR Let's make this function in a more OOP way: SHould be changed to POlicy Health 
 class Policy_Health:
+#class Policy_Ski:
     def __init__(self, x1TmaxThershold, x2TminThershold):
         self.x1TmaxThershold = x1TmaxThershold
         self.x2TminThershold = x2TminThershold
@@ -252,10 +255,10 @@ class RCP_Model:
         return (int(climateModel))
 
     
-def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None, xRevenueDay = None, 
-                x1TmaxThershold = None, x2TminThershold = None):
+def HDNs_Model (xRCP=None, xClimateModel=None, Xfactor1 = None, xCostDay = None, xRevenueDay = None,
+                 x1TmaxThershold = None, x2TminThershold = None):
 
-    '''' This function controls the Ski resort model in an XLR framework'''
+    '''' This function controls the HDNs model in the XLR framework'''
     
     ''' VERY IMPORTANT --- Controling the randomness --- VERY IMPORTANT'''
     xClimateRandomness = round(Xfactor1)
@@ -348,6 +351,8 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
         '''making a header for output files'''
         dfpcpCol = dfpcp[k].columns
         dftmpCol = dftmp[k].columns
+
+
         
 
         '''defining the length of simulations and scenarios'''
@@ -362,6 +367,8 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
         is_extreme_Tmin =  [0 for _ in range(simulationLength)]
         is_extreme_Compound = [0 for _ in range(simulationLength)]
         total = np.zeros([simulationLength, 3*scenariosLength])
+
+
 
 
         '''RCP and Climate Model Controler'''
@@ -386,33 +393,36 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
             EMA_workbench_controler for the thershold of hott days and hot nights'''
 
             policyCities = Policy_Health(x1TmaxThershold, x2TminThershold) ## 30 C and 15 C
-            tmax_Thershold, tmin_Thershold = policyCities.policy_release2()
+            x1TmaxThershold, x2TminThershold = policyCities.policy_release2()
             
 
             
             '''EMA_workbench_controler for the thershold daily fixed revenue and cost expenses'''
 
+
+
             '''Tmax check of the first day:'''
-            if (todayTMPMAX) >= tmax_Thershold:
+            if (todayTMPMAX) >= x1TmaxThershold:
                 is_extreme_Tmax[0] = 1
 
             else: is_extreme_Tmax[0] = 0
 
 
             '''Tmin check of the first day:'''
-            if (todayTMPMIN) >= tmin_Thershold:
+            if (todayTMPMIN) >= x2TminThershold:
                 is_extreme_Tmin[0] = 1
 
             else: is_extreme_Tmin[0] = 0
 
             '''Tmax and Tmin compound check of the first day:'''
-            if (is_extreme_Tmax[0] == 1) and (is_extreme_Tmin[0] == 1) >= tmin_Thershold:
+            if (is_extreme_Tmax[0] == 1) and (is_extreme_Tmin[0] == 1):
                 is_extreme_Compound[0] = 1
 
             else: is_extreme_Compound[0] = 0
 
 
             '''storing three values in a list for the first day'''
+
             
             total[0,0] = round(is_extreme_Tmax[0], 2)
             total[0,1] = round(is_extreme_Tmin[0], 2)
@@ -429,20 +439,22 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
                 todayTMPMIN = round(dftmp[k][dftmpCol[2*j+1]].iloc[i],2) if(dftmp[k][dftmpCol[2*j+1]].iloc[i] != -99) else 0
                 todayTMPAVE = round((todayTMPMAX+todayTMPMIN)/2,2) if((todayTMPMAX+todayTMPMIN)/2 != -99) else 0
 
-                if (todayTMPMAX) >= tmax_Thershold:
+
+
+                if (todayTMPMAX) >= x1TmaxThershold:
                     is_extreme_Tmax[i-1] = 1
 
                 else: is_extreme_Tmax[i-1] = 0
 
 
                 '''Tmin check of the first day:'''
-                if (todayTMPMIN) >= tmin_Thershold:
+                if (todayTMPMIN) >= x2TminThershold:
                     is_extreme_Tmin[i-1] = 1
 
                 else: is_extreme_Tmin[i-1] = 0
 
                 '''Tmax and Tmin compound check of the first day:'''
-                if (is_extreme_Tmax[i-1] == 1) and (is_extreme_Tmin[i-1] == 1) >= tmin_Thershold:
+                if (is_extreme_Tmax[i-1] == 1) and (is_extreme_Tmin[i-1] == 1):
                     is_extreme_Compound[i-1] = 1
 
                 else: is_extreme_Compound[i-1] = 0
@@ -453,14 +465,18 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
                 total[i,2] = round(is_extreme_Compound[0], 2)
 
 
+    
         '''Saving the Outputs of total list in a CSV file in a specific path'''
 
         ## 1st row as the column names:
         
         columnsDF = []
+        #columnsDF_aerSnowCheck = []
 
-
+        
+        
         nameHeader = dfpcpCol[climateModel]
+
 
 
         columnsDF.append('is_Tmax_' + nameHeader)
@@ -473,6 +489,8 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
         dfnew0 = pd.DataFrame(dateList, columns = columnsDF0)
         dfnew1 = pd.DataFrame(total, columns = columnsDF)
         df1 = pd.concat([dfnew0, dfnew1], axis=1, sort=False)
+
+
 
 
 
@@ -493,9 +511,9 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
 
 
         '''################################ PART2 ################################'''
-        '''##### PART 2 Annual outputs events#####'''
+        '''##### PART 2 seasonal outputs Tipping points and Liklihood of Survival#####'''
         
-        print('Snow_Model: Starting Part 2, Running the model, annual outputs, reading files!')
+        print('Snow_Model: Starting Part 2, Running the model, seasonal outputs, reading files!')
 
         #### 20210226 ####
         total_Daily_FilesAll = list()
@@ -511,7 +529,7 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
         for bIndex in range (len(total_Daily_FilesAll)):        
             if 'Total_daily_' in total_Daily_FilesAll[bIndex]:
                 total_Daily_Files.append(total_Daily_FilesAll[bIndex])
- 
+
 
             else: continue
         
@@ -523,6 +541,7 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
 
     
         '''##Adding the whole address of directory to the name of total daily money files'''
+
 
 
         print('Snow Model: Continuing of Part 2, Seasonal Outputs, Performing  Tipping Points Analyses!')
@@ -565,8 +584,8 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
                 df2ColCal.append(df2Col[3*m+2])
 
             sumGoodCondition = np.zeros([len(start_season), len(df2ColCal)])
-            #sumRows = np.zeros(len(df2ColCal))  ### Saeed  2021
-            sumRows = np.zeros(len(start_season)) ### Saeed  2021
+            #sumRows = np.zeros(len(df2ColCal))  ### Saeed  2020/06/11
+            sumRows = np.zeros(len(start_season)) ### Saeed  2020/08/17
  
             for j in range(len(df2ColCal)):
                 for k in range(len(start_season)):
@@ -618,6 +637,7 @@ def snow_Model (xRCP=None, xClimateModel=None, Xfactor1 = None,  xCostDay = None
             print('End of all calculations')
 
 
+        #return {'S_Ave_GoodDay' : AveragesumRows}
         return {'S_Ave_GoodDay' : AveragesumRows, 'GCM_RCM' : climateModel, 'y2' : dfpcpCol[climateModel], 'S_GoodDay' : sumRows}
 
 
@@ -634,8 +654,7 @@ It's main purpose has been to test the parallel processing functionality
 
 .. codeauthor:: jhkwakkel <j.h.kwakkel (at) tudelft (dot) nl>
 '''
-#(absolute_import, print_function, division,
-#                       unicode_literals)
+
 
 from ema_workbench import (Model, RealParameter, Constant, ScalarOutcome, ema_logging, IntegerParameter,
                           CategoricalParameter, perform_experiments, TimeSeriesOutcome, ArrayOutcome)
@@ -649,25 +668,28 @@ if __name__ == '__main__':
     ema_logging.LOG_FORMAT = '[%(name)s/%(levelname)s/%(processName)s] %(message)s'
     ema_logging.log_to_stderr(ema_logging.INFO)
 
-    model = Model('UZHModel', function = snow_Model)  # instantiate the model
+    model = Model('UZHModel', function = HDNs_Model)  # instantiate the model
     
     
     # specify process model parameters  xRCP=None, xClimateModel=None
     model.uncertainties = [RealParameter("Xfactor1",  0.51, 3.49),
                             IntegerParameter ("xRCP", 1,3),  
                             #RealParameter("xRCP", 0.51, 3.49),
-                           RealParameter("xClimateModel", 0, 1)]
+                           RealParameter("xClimateModel", 0, 1),
+                           ]
     
     # specify polices IntegerParameter
-    model.levers = [RealParameter("x1TmaxThershold", 25.0, 30.0),
-                    RealParameter("x2TminThershold", 10.0, 15.0)]
+    model.levers = [
+                    RealParameter("x1TmaxThershold", -8.0, -6.0),
+                    RealParameter("x2TminThershold", -10.0, -8.0)]
    
 
     # specify outcomes
     model.outcomes = [ScalarOutcome('S_Ave_GoodDay'),
                       ScalarOutcome('GCM_RCM'),
                       ArrayOutcome('S_GoodDay')
+
                       ]
-    
-    results = perform_experiments(model, 4, 6)
+
+    results = perform_experiments(model, 3, 2)
 
