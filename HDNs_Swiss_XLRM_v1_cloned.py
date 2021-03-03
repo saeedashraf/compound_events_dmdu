@@ -168,8 +168,8 @@ climateFolder1 = ''
 climateFolder2 = ''
 
 
-root = r'C:\Saeid\Prj100\SA_11_HDNS\case1_Zurich\setup1'
-#root = r'C:\Saeid\Prj100\SA_11_HDNS\case2_Basel\setup1'
+#root = r'C:\Saeid\Prj100\SA_11_HDNS\case1_Zurich\setup1'
+root = r'C:\Saeid\Prj100\SA_11_HDNS\case2_Basel\setup1'
 
 
 ## calling the function with multiple return values
@@ -351,8 +351,6 @@ def HDNs_Model (xRCP=None, xClimateModel=None, Xfactor1 = None, xCostDay = None,
         '''making a header for output files'''
         dfpcpCol = dfpcp[k].columns
         dftmpCol = dftmp[k].columns
-
-
         
 
         '''defining the length of simulations and scenarios'''
@@ -362,7 +360,7 @@ def HDNs_Model (xRCP=None, xClimateModel=None, Xfactor1 = None, xCostDay = None,
 
 
         '''declaring the initial arrays'''
- 
+
         is_extreme_Tmax =  [0 for _ in range(simulationLength)]
         is_extreme_Tmin =  [0 for _ in range(simulationLength)]
         is_extreme_Compound = [0 for _ in range(simulationLength)]
@@ -391,14 +389,14 @@ def HDNs_Model (xRCP=None, xClimateModel=None, Xfactor1 = None, xCostDay = None,
 
             '''Thershold Temperatures C
             EMA_workbench_controler for the thershold of hott days and hot nights'''
-
+  
             policyCities = Policy_Health(x1TmaxThershold, x2TminThershold) ## 30 C and 15 C
             x1TmaxThershold, x2TminThershold = policyCities.policy_release2()
             
 
             
             '''EMA_workbench_controler for the thershold daily fixed revenue and cost expenses'''
-
+   
 
 
             '''Tmax check of the first day:'''
@@ -471,7 +469,7 @@ def HDNs_Model (xRCP=None, xClimateModel=None, Xfactor1 = None, xCostDay = None,
         ## 1st row as the column names:
         
         columnsDF = []
-        #columnsDF_aerSnowCheck = []
+        
 
         
         
@@ -513,7 +511,7 @@ def HDNs_Model (xRCP=None, xClimateModel=None, Xfactor1 = None, xCostDay = None,
         '''################################ PART2 ################################'''
         '''##### PART 2 seasonal outputs Tipping points and Liklihood of Survival#####'''
         
-        print('Snow_Model: Starting Part 2, Running the model, seasonal outputs, reading files!')
+        print('HDNS_Model: Starting Part 2, Running the model, seasonal outputs, reading files!')
 
         #### 20210226 ####
         total_Daily_FilesAll = list()
@@ -529,22 +527,25 @@ def HDNs_Model (xRCP=None, xClimateModel=None, Xfactor1 = None, xCostDay = None,
         for bIndex in range (len(total_Daily_FilesAll)):        
             if 'Total_daily_' in total_Daily_FilesAll[bIndex]:
                 total_Daily_Files.append(total_Daily_FilesAll[bIndex])
-
+            #elif 'Moneydaily_' in total_Daily_FilesAll[bIndex]:
+             #   total_Money_Files.append(total_Daily_FilesAll[bIndex])
 
             else: continue
         
 
-        '##Adding the whole address of directory to the name of total daily snow files'''
+        '##Adding the whole address of directory to the name of total daily files'''
         totalFiles = []
         for i in range(len(total_Daily_Files)):
             totalFiles.append(os.path.join(outfolder, total_Daily_Files[i])) 
 
     
         '''##Adding the whole address of directory to the name of total daily money files'''
+        #totalMoneyFiles = []
+        #for i in range(len(total_Money_Files)):
+         #   totalMoneyFiles.append(os.path.join(outfolder, total_Money_Files[i]))
 
 
-
-        print('Snow Model: Continuing of Part 2, Seasonal Outputs, Performing  Tipping Points Analyses!')
+        print('HDNS Model: Continuing of Part 2, Seasonal Outputs, Performing  Tipping Points Analyses!')
         
         
         ## databases are read here: 
@@ -654,7 +655,8 @@ It's main purpose has been to test the parallel processing functionality
 
 .. codeauthor:: jhkwakkel <j.h.kwakkel (at) tudelft (dot) nl>
 '''
-
+#(absolute_import, print_function, division,
+#                       unicode_literals)
 
 from ema_workbench import (Model, RealParameter, Constant, ScalarOutcome, ema_logging, IntegerParameter,
                           CategoricalParameter, perform_experiments, TimeSeriesOutcome, ArrayOutcome)
@@ -676,20 +678,43 @@ if __name__ == '__main__':
                             IntegerParameter ("xRCP", 1,3),  
                             #RealParameter("xRCP", 0.51, 3.49),
                            RealParameter("xClimateModel", 0, 1),
+                           #RealParameter("X2fM", 1.01, 1.61),
+                           #RealParameter("X3iPot", 900, 1100),                        
+                           #RealParameter("X5temp", 4.5, 6.0),
+                           #RealParameter("X6tempArt", -2.0, -1.0)
+                            
                            ]
     
     # specify polices IntegerParameter
     model.levers = [
-                    RealParameter("x1TmaxThershold", -8.0, -6.0),
-                    RealParameter("x2TminThershold", -10.0, -8.0)]
+                    RealParameter("x1TmaxThershold", -4.0, -2.0),
+                    RealParameter("x2TminThershold", -14.0, -5.0)]
    
 
     # specify outcomes
     model.outcomes = [ScalarOutcome('S_Ave_GoodDay'),
                       ScalarOutcome('GCM_RCM'),
                       ArrayOutcome('S_GoodDay')
-
                       ]
+    
+    # override some of the defaults of the model
+    #model.constants = [
+    #                   Constant("xCostDay", 6),
+     #                  Constant("xRevenueDay", 10)]
+    
 
-    results = perform_experiments(model, 3, 2)
+    #results = perform_experiments(model, 1500, 5)
+    #results = perform_experiments(model, 200, 45)
+    results = perform_experiments(model, 1, 2)
 
+
+print('end!')
+training_time = time.time() - start_time
+
+print("--- %s seconds ---" % (training_time))
+print('training time : {} mins and {} seconds'.format((training_time // 60) , round((training_time % 60), 1)))
+print('training time : {} hours {} mins and {} seconds '.format(training_time // 3600 , round((training_time % 3600 // 60), 1), round((training_time % 3600) % 60 ,1)))
+
+# Save the outputs
+from ema_workbench import save_results
+save_results(results, r'C:\Saeid\Prj100\SA_11_HDNS\case2_Basel\setup1\2_runs.tar.gz')
