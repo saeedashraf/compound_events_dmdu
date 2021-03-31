@@ -1,8 +1,0 @@
-Xfactor1,float64
-xClimateModel,float64
-xRCP,float64
-x1TmaxThershold,float64
-x2TminThershold,float64
-scenario,object
-policy,object
-model,object
